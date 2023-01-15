@@ -1,33 +1,48 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import { Link } from 'react-router-dom';
+
+import LoadingScreen from '../components/LoadingScreen';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
-
-import bulbasaur from '../assets/bulbasaur.gif';
 import styles from './pokemons.module.css';
 import { fetchPokemons } from '../api/fetchPokemons';
-
+import { waitFor } from '../utils/utils';
+import { Pokemon } from '../types/types.d';
 const Pokemons = () => {
-    const [query, setQuery] = React.useState('');
-    const [error, setError] = React.useState('');
-    const [pokemons, setPokemons] = React.useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [query, setQuery] = useState('');
+    const [pokemons, setPokemons] = useState<Pokemon[]>([]);
 
     useEffect(() => {
         const fetchAllPokemons = async () => {
+            setIsLoading(true);
+            await waitFor(1000);
             const allPokemons = await fetchPokemons();
-            if(allPokemons.length > 0) {
-                setPokemons(allPokemons);
-            }else {
-                setError('No pokemons found');
-                setPokemons([]);
-            }
+            setPokemons(allPokemons);
+            setIsLoading(false);
         };
         fetchAllPokemons();
     }, []);
 
-    const listPokemons = pokemons.slice(0, 151).map((pokemon: any) => (
-        <Link className={styles.listItem} to="/">
-            <img className={styles.listItemIcon} src={pokemon.image} alt="bulbasaur" />
+    if (isLoading || !pokemons) {
+        return <LoadingScreen />;
+    }
+
+    const filteredPokemon = pokemons?.slice(0, 151).filter((pokemon: any) => {
+        return pokemon.name.toLowerCase().match(query.toLowerCase());
+    });
+
+    const listPokemons = filteredPokemon?.map((pokemon: any) => (
+        <Link 
+            key={pokemon.id}
+            className={styles.listItem}
+            to={`/pokemon/${pokemon.name.toLowerCase()}`}
+        >
+            <img 
+                className={styles.listItemIcon} 
+                src={pokemon.image} 
+                alt={pokemon.name} 
+            />
             <div className={styles.listItemText}>
                 <span>{pokemon.name}</span>
                 <small>{pokemon.id}</small>
@@ -38,8 +53,7 @@ const Pokemons = () => {
     return <> 
         <Header query={query} setQuery={setQuery} />
         <main>
-            {error}
-            <nav>
+            <nav className={styles.nav}>
                 {listPokemons}
             </nav>
         </main>

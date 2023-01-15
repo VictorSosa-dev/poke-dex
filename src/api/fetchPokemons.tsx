@@ -1,8 +1,10 @@
 import { formatPokemonName } from "../utils/utils";
-const api = "https://unpkg.com/pokemons@1.1.0/pokemons.json";
+import { Pokemon } from "../types/types.d";
+const API = "https://unpkg.com/pokemons@1.1.0/pokemons.json";
 
-export const fetchPokemons = async () => {
-    const response = await fetch(api);
+
+export const fetchPokemons = async (): Promise<Pokemon[]> => {
+    const response = await fetch(API);
 
     if (!response.ok) {
         throw new Error("Something went wrong");
